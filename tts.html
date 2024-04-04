@@ -1,24 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chrome 텍스트 음성 변환 - TTS TEST</title>
+    <title>텍스트 음성 변환 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input, button, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box; /* Adds padding without affecting width */
+        }
+
+        .controls {
+            margin-top: 10px;
+        }
+
+        label {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <h1>텍스트를 음성으로 변환</h1>
     <input type="text" id="text-to-speak" placeholder="여기에 텍스트를 입력하세요..." />
-    <br><br>
-    <button onclick="addExampleText('ko')">한국어로 설정하기</button>
-    <button onclick="addExampleText('en')">영어로 설정하기</button>
-    <br><br>
-    Rate: <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1">
-    <span id="rate-value">1</span>
-    <br><br>
-    Pitch: <input type="range" id="pitch" min="0" max="2" value="1" step="0.1">
-    <span id="pitch-value">1</span>
-    <br><br>
-    Voice: <select id="voice-select"></select>
-    <br><br>
-    <button onclick="speakText()">읽어주기</button>
+    <div class="controls">
+        <button onclick="addExampleText('ko')">한국어로 설정하기</button>
+        <button onclick="addExampleText('en')">영어로 설정하기</button>
+        <label>Rate: <span id="rate-value">1</span></label>
+        <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1">
+        <label>Pitch: <span id="pitch-value">1</span></label>
+        <input type="range" id="pitch" min="0" max="2" value="1" step="0.1">
+        <label>Voice:</label>
+        <select id="voice-select"></select>
+        <button onclick="speakText()">읽어주기</button>
+    </div>
 
     <script>
         const rate = document.getElementById('rate');
@@ -27,7 +52,6 @@
         const textInput = document.getElementById('text-to-speak');
         let currentLang = 'ko'; // 기본 언어 설정
 
-        // 속도와 음높이 값 표시 업데이트
         rate.onchange = function() {
             document.getElementById('rate-value').textContent = rate.value;
         }
@@ -43,18 +67,16 @@
             var voices = speechSynthesis.getVoices();
             voiceSelect.innerHTML = '';
 
-            for(var i = 0; i < voices.length ; i++) {
-                var option = document.createElement('option');
-                option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
-                
-                if(voices[i].default) {
-                    option.textContent += ' -- DEFAULT';
+            voices.forEach(voice => {
+                let option = document.createElement('option');
+                option.textContent = voice.name + ' (' + voice.lang + ')';
+                option.setAttribute('data-lang', voice.lang);
+                option.setAttribute('data-name', voice.name);
+                if(currentLang.startsWith(voice.lang)) {
+                    option.selected = true;
                 }
-
-                option.setAttribute('data-lang', voices[i].lang);
-                option.setAttribute('data-name', voices[i].name);
                 voiceSelect.appendChild(option);
-            }
+            });
         }
 
         populateVoiceList();
@@ -65,17 +87,17 @@
         function speakText() {
             const text = textInput.value;
             const utterance = new SpeechSynthesisUtterance(text);
-            const selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
-            utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === selectedOption);
+            const selectedVoiceName = voiceSelect.selectedOptions[0].getAttribute('data-name');
+            utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === selectedVoiceName);
             utterance.rate = rate.value;
             utterance.pitch = pitch.value;
             utterance.lang = currentLang;
-
             window.speechSynthesis.speak(utterance);
         }
 
         function addExampleText(lang) {
             currentLang = lang;
+            populateVoiceList();
             if(lang === 'ko') {
                 textInput.value = "안녕하세요, 이것은 텍스트를 음성으로 변환하는 예제입니다. 코드는 어떻게 읽을까요? #include<stdio.h> void main() { printf(\"Hello, World! %d\\n\", 1234); }";
             } else if(lang === 'en') {
