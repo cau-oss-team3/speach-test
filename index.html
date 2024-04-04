@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>음성 인식 TEST</title>
+</head>
+<body>
+    <h1>음성 인식 테스트</h1>
+    <p>스페이스바를 눌러 음성 인식을 시작하세요.</p>
+    <div id="transcript">인식된 내용이 여기에 표시됩니다...</div>
+
+    <script>
+        // 음성 인식 객체 생성
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+        // 음성 인식 결과 이벤트 핸들러
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('transcript').textContent = transcript;
+        };
+
+        // 에러 핸들링
+        recognition.onerror = (event) => {
+            console.error('음성 인식 오류:', event.error);
+        };
+
+        // 키보드 이벤트 리스너
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && event.target === document.body) {
+                event.preventDefault();
+                recognition.start();  // 스페이스바를 누르면 음성 인식 시작
+            }
+        });
+    </script>
+</body>
+</html>
