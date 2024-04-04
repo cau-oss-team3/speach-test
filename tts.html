@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>텍스트 음성 변환 예제</title>
+</head>
+<body>
+    <h1>텍스트를 음성으로 변환</h1>
+    <input type="text" id="text-to-speak" placeholder="여기에 텍스트를 입력하세요..." />
+    <button onclick="speakText()">읽어주기</button>
+
+    <script>
+        function speakText() {
+            const text = document.getElementById('text-to-speak').value; // 입력 필드에서 텍스트 가져오기
+            const utterance = new SpeechSynthesisUtterance(text); // 음성 변환 객체 생성
+
+            // 선택한 텍스트를 음성으로 변환하여 출력
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
