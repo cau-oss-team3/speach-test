@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>음성 인식 및 TTS 데모 with Web Worker</title>
+</head>
+<body>
+  <h1>음성 인식 및 텍스트 음성 변환 데모</h1>
+  <p>마이크에 말하면 텍스트로 변환 후 3초간 침묵이 감지되면 읽어줍니다.</p>
+  <script>
+    var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    var synth = window.speechSynthesis;
+    var finalTranscript = '';
+    var worker = new Worker('silenceDetector.js');
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'ko-KR';
+
+    recognition.onresult = function(event) {
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      if (finalTranscript || interimTranscript) {
+        worker.postMessage({ cmd: 'reset_timer' });
+      }
+    };
+
+    recognition.start();
+
+    worker.onmessage = function(e) {
+      if (e.data === 'speak') {
+        speak(finalTranscript);
+        finalTranscript = '';
+      }
+    };
+
+    function speak(text) {
+      if (text !== '' && !synth.speaking) {
+        var utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        synth.speak(utterance);
+      }
+    }
+  </script>
+</body>
+</html>
