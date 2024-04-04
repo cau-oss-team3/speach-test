@@ -43,6 +43,7 @@
         <label>Voice:</label>
         <select id="voice-select"></select>
         <button onclick="speakText()">읽어주기</button>
+        <button onclick="stopSpeaking()">정지하기</button>
     </div>
 
     <script>
@@ -50,7 +51,6 @@
         const pitch = document.getElementById('pitch');
         const voiceSelect = document.getElementById('voice-select');
         const textInput = document.getElementById('text-to-speak');
-        let currentLang = 'ko'; // 기본 언어 설정
 
         rate.onchange = function() {
             document.getElementById('rate-value').textContent = rate.value;
@@ -64,7 +64,7 @@
                 return;
             }
 
-            var voices = speechSynthesis.getVoices();
+            var voices = speechSynthesis.getVoices().filter(voice => voice.lang.startsWith('en') || voice.lang.startsWith('ko'));
             voiceSelect.innerHTML = '';
 
             voices.forEach(voice => {
@@ -72,9 +72,6 @@
                 option.textContent = voice.name + ' (' + voice.lang + ')';
                 option.setAttribute('data-lang', voice.lang);
                 option.setAttribute('data-name', voice.name);
-                if(currentLang.startsWith(voice.lang)) {
-                    option.selected = true;
-                }
                 voiceSelect.appendChild(option);
             });
         }
@@ -91,17 +88,27 @@
             utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === selectedVoiceName);
             utterance.rate = rate.value;
             utterance.pitch = pitch.value;
-            utterance.lang = currentLang;
             window.speechSynthesis.speak(utterance);
         }
 
+        function stopSpeaking() {
+            window.speechSynthesis.cancel();
+        }
+
         function addExampleText(lang) {
-            currentLang = lang;
-            populateVoiceList();
             if(lang === 'ko') {
                 textInput.value = "안녕하세요, 이것은 텍스트를 음성으로 변환하는 예제입니다. 코드는 어떻게 읽을까요? #include<stdio.h> void main() { printf(\"Hello, World! %d\\n\", 1234); }";
+                selectVoice('ko-KR');
             } else if(lang === 'en') {
                 textInput.value = "Hello, this is an example of text to speech conversion. How will the code sounds like? #include<stdio.h> void main() { printf(\"Hello, World! %d\\n\", 1234); }";
+                selectVoice('en-US');
+            }
+        }
+
+        function selectVoice(lang) {
+            let voices = speechSynthesis.getVoices().filter(voice => voice.lang.startsWith(lang));
+            if(voices.length > 0) {
+                voiceSelect.value = voices[0].name;
             }
         }
     </script>
