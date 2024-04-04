@@ -1,33 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>음성 인식 TEST</title>
+    <title>Chrome 음성 인식 - TTS TEST</title>
 </head>
 <body>
     <h1>음성 인식 테스트</h1>
-    <p>스페이스바를 눌러 음성 인식을 시작하세요.</p>
+    <p>키보드 'Enter' 키를 누르거나 아래 버튼을 클릭하여 음성 인식을 시작하세요.</p>
+    <button id="start-recognition">음성 인식 시작</button>
     <div id="transcript">인식된 내용이 여기에 표시됩니다...</div>
 
     <script>
-        // 음성 인식 객체 생성
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        let isListening = false;
 
-        // 음성 인식 결과 이벤트 핸들러
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('transcript').textContent = transcript;
+        recognition.continuous = true; // 연속적인 인식을 위해 true로 설정
+        recognition.lang = 'ko-KR'; // 음성 인식 언어를 한국어로 설정
+        recognition.interimResults = false; // 중간 결과는 무시
+
+        recognition.onstart = function() {
+            isListening = true;
+            console.log('음성 인식이 시작되었습니다. 말씀하세요...');
         };
 
-        // 에러 핸들링
-        recognition.onerror = (event) => {
+        recognition.onerror = function(event) {
             console.error('음성 인식 오류:', event.error);
         };
 
-        // 키보드 이벤트 리스너
+        recognition.onend = function() {
+            if (isListening) {
+                recognition.start(); // 마이크 권한 유지를 위해 종료 후 재시작
+            } else {
+                console.log('음성 인식이 종료되었습니다.');
+            }
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[event.resultIndex][0].transcript;
+            document.getElementById('transcript').textContent = transcript;
+        };
+
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space' && event.target === document.body) {
-                event.preventDefault();
-                recognition.start();  // 스페이스바를 누르면 음성 인식 시작
+            if (event.key === 'Enter' && !isListening) {
+                recognition.start();
+            }
+        });
+
+        document.getElementById('start-recognition').addEventListener('click', () => {
+            if (!isListening) {
+                recognition.start();
             }
         });
     </script>
