@@ -1,20 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>텍스트 음성 변환 예제</title>
+    <title>Chrome 텍스트 음성 변환 - TTS TEST</title>
 </head>
 <body>
     <h1>텍스트를 음성으로 변환</h1>
     <input type="text" id="text-to-speak" placeholder="여기에 텍스트를 입력하세요..." />
+    <br><br>
+    <button onclick="addExampleText()">예제 텍스트 추가</button>
+    <br><br>
+    Rate: <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1">
+    <span id="rate-value">1</span>
+    <br><br>
+    Pitch: <input type="range" id="pitch" min="0" max="2" value="1" step="0.1">
+    <span id="pitch-value">1</span>
+    <br><br>
+    Voice: <select id="voice-select"></select>
+    <br><br>
     <button onclick="speakText()">읽어주기</button>
 
     <script>
-        function speakText() {
-            const text = document.getElementById('text-to-speak').value; // 입력 필드에서 텍스트 가져오기
-            const utterance = new SpeechSynthesisUtterance(text); // 음성 변환 객체 생성
+        const rate = document.getElementById('rate');
+        const pitch = document.getElementById('pitch');
+        const voiceSelect = document.getElementById('voice-select');
+        const textInput = document.getElementById('text-to-speak');
 
-            // 선택한 텍스트를 음성으로 변환하여 출력
+        // 속도와 음높이 값 표시 업데이트
+        rate.onchange = function() {
+            document.getElementById('rate-value').textContent = rate.value;
+        }
+        pitch.onchange = function() {
+            document.getElementById('pitch-value').textContent = pitch.value;
+        }
+
+        function populateVoiceList() {
+            if(typeof speechSynthesis === 'undefined') {
+                return;
+            }
+
+            var voices = speechSynthesis.getVoices();
+
+            for(var i = 0; i < voices.length ; i++) {
+                var option = document.createElement('option');
+                option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+                
+                if(voices[i].default) {
+                    option.textContent += ' -- DEFAULT';
+                }
+
+                option.setAttribute('data-lang', voices[i].lang);
+                option.setAttribute('data-name', voices[i].name);
+                voiceSelect.appendChild(option);
+            }
+        }
+
+        populateVoiceList();
+        if(typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        function speakText() {
+            const text = textInput.value;
+            const utterance = new SpeechSynthesisUtterance(text);
+            const selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
+            utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === selectedOption);
+            utterance.rate = rate.value;
+            utterance.pitch = pitch.value;
+
             window.speechSynthesis.speak(utterance);
+        }
+
+        function addExampleText() {
+            textInput.value = "나는 그루트다. 이것은 테스트 텍스트입니다. #include <stdio.h> 코딩 좋아";
         }
     </script>
 </body>
