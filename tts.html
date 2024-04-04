@@ -72,6 +72,7 @@
                 option.textContent = voice.name + ' (' + voice.lang + ')';
                 option.setAttribute('data-lang', voice.lang);
                 option.setAttribute('data-name', voice.name);
+                option.value = voice.name; // Use voice name as value for easy retrieval
                 voiceSelect.appendChild(option);
             });
         }
@@ -82,9 +83,14 @@
         }
 
         function speakText() {
+            if(voiceSelect.selectedOptions.length === 0) {
+                console.error("No voice selected");
+                return;
+            }
+
             const text = textInput.value;
+            const selectedVoiceName = voiceSelect.value; // Use the value attribute
             const utterance = new SpeechSynthesisUtterance(text);
-            const selectedVoiceName = voiceSelect.selectedOptions[0].getAttribute('data-name');
             utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === selectedVoiceName);
             utterance.rate = rate.value;
             utterance.pitch = pitch.value;
@@ -97,11 +103,11 @@
 
         function addExampleText(lang) {
             if(lang === 'ko') {
-                textInput.value = "안녕하세요, 이것은 텍스트를 음성으로 변환하는 예제입니다. 코드는 어떻게 읽을까요? #include<stdio.h> void main() { printf(\"Hello, World! %d\\n\", 1234); }";
-                selectVoice('ko-KR');
+                textInput.value = "안녕하세요, 이것은 텍스트를 음성으로 변환하는 예제입니다.";
+                selectVoice('ko');
             } else if(lang === 'en') {
-                textInput.value = "Hello, this is an example of text to speech conversion. How will the code sounds like? #include<stdio.h> void main() { printf(\"Hello, World! %d\\n\", 1234); }";
-                selectVoice('en-US');
+                textInput.value = "Hello, this is an example of text to speech conversion.";
+                selectVoice('en');
             }
         }
 
