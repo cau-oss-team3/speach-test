@@ -1,25 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chrome 음성 인식 - TTS TEST</title>
+    <title>음성 인식 테스트</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            margin: 10px;
+            padding: 10px;
+            color: white;
+            background-color: green;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .listening {
+            background-color: red;
+        }
+
+        .log {
+            border: 1px solid #ccc;
+            height: 200px;
+            margin-top: 20px;
+            padding: 10px;
+            overflow-y: scroll;
+        }
+    </style>
 </head>
 <body>
-    <h1>음성 인식 테스트</h1>
-    <p>키보드 'Enter' 키를 누르거나 아래 버튼을 클릭하여 음성 인식을 시작하세요.</p>
-    <button id="start-recognition">음성 인식 시작</button>
-    <div id="transcript">인식된 내용이 여기에 표시됩니다...</div>
+    <div class="container">
+        <h1>음성 인식 테스트</h1>
+        <div id="status" class="status">준비됨</div>
+        <button onclick="toggleListening()">음성 인식 시작/정지</button>
+        <div class="log" id="log"></div>
+    </div>
 
     <script>
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        let isListening = false;
+        const statusDiv = document.getElementById('status');
+        const logDiv = document.getElementById('log');
 
-        recognition.continuous = true; // 연속적인 인식을 위해 true로 설정
-        recognition.lang = 'ko-KR'; // 음성 인식 언어를 한국어로 설정
-        recognition.interimResults = false; // 중간 결과는 무시
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'ko-KR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        let listening = false;
 
         recognition.onstart = function() {
-            isListening = true;
-            console.log('음성 인식이 시작되었습니다. 말씀하세요...');
+            listening = true;
+            updateStatus();
         };
 
         recognition.onerror = function(event) {
@@ -27,29 +74,38 @@
         };
 
         recognition.onend = function() {
-            if (isListening) {
-                recognition.start(); // 마이크 권한 유지를 위해 종료 후 재시작
-            } else {
-                console.log('음성 인식이 종료되었습니다.');
+            listening = false;
+            updateStatus();
+            if (listening) {
+                recognition.start();
             }
         };
 
         recognition.onresult = function(event) {
-            const transcript = event.results[event.resultIndex][0].transcript;
-            document.getElementById('transcript').textContent = transcript;
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    logDiv.innerHTML += '<div>' + event.results[i][0].transcript + '</div>';
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            logDiv.innerHTML += '<div style="color: #ccc;">' + interimTranscript + '</div>';
+            logDiv.scrollTop = logDiv.scrollHeight;
         };
 
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !isListening) {
+        function toggleListening() {
+            if (listening) {
+                recognition.stop();
+            } else {
                 recognition.start();
             }
-        });
+        }
 
-        document.getElementById('start-recognition').addEventListener('click', () => {
-            if (!isListening) {
-                recognition.start();
-            }
-        });
+        function updateStatus() {
+            statusDiv.textContent = listening ? '듣고 있음...' : '준비됨';
+            statusDiv.className = listening ? 'status listening' : 'status';
+        }
     </script>
 </body>
 </html>
